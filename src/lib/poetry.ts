@@ -488,11 +488,16 @@ export async function fetchPoems(): Promise<Poem[]> {
   }
 }
 
+export interface DailyReadings {
+  poem: Reading;
+  essay: Reading;
+}
+
 /**
- * Get a deterministic daily reading based on the date
- * Same reading for everyone on the same day
+ * Get a deterministic daily poem and essay based on the date
+ * Same readings for everyone on the same day
  */
-export async function getDailyReading(date: Date = new Date()): Promise<Reading> {
+export async function getDailyReadings(date: Date = new Date()): Promise<DailyReadings> {
   // Create a seed from the date (YYYYMMDD format)
   const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
   const seed = parseInt(dateStr, 10);
@@ -500,7 +505,7 @@ export async function getDailyReading(date: Date = new Date()): Promise<Reading>
   // Fetch poems
   const poems = await fetchPoems();
 
-  // Combine poems and essays into one collection
+  // Convert poems to Reading format
   const poemReadings: Reading[] = poems.map((poem) => ({
     type: 'poem' as const,
     title: poem.title,
@@ -510,12 +515,36 @@ export async function getDailyReading(date: Date = new Date()): Promise<Reading>
     sourceUrl: 'https://poetrydb.org',
   }));
 
-  const allReadings = [...poemReadings, ...CURATED_ESSAYS];
+  // Use different seeds for poem and essay to get variety
+  const poemIndex = seed % Math.max(poemReadings.length, 1);
+  const essayIndex = (seed * 7) % CURATED_ESSAYS.length; // Use different multiplier for variety
 
-  // Use the seed to pick a reading deterministically
-  const index = seed % allReadings.length;
+  const poem = poemReadings[poemIndex] || {
+    type: 'poem' as const,
+    title: 'Hope is the thing with feathers',
+    author: 'Emily Dickinson',
+    content: [
+      'Hope is the thing with feathers',
+      'That perches in the soul,',
+      'And sings the tune without the words,',
+      'And never stops at all,',
+    ],
+    source: 'PoetryDB',
+    sourceUrl: 'https://poetrydb.org',
+  };
 
-  return allReadings[index] || CURATED_ESSAYS[0];
+  const essay = CURATED_ESSAYS[essayIndex];
+
+  return { poem, essay };
+}
+
+/**
+ * Get a deterministic daily reading based on the date (legacy, returns single reading)
+ * Same reading for everyone on the same day
+ */
+export async function getDailyReading(date: Date = new Date()): Promise<Reading> {
+  const { poem } = await getDailyReadings(date);
+  return poem;
 }
 
 /**
