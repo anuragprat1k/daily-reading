@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fafaf9;
+  --foreground: #1c1917;
+  --font-serif: var(--font-lora), Georgia, Cambria, "Times New Roman", Times, serif;
 }
 
 @theme inline {
@@ -14,13 +15,41 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0c0a09;
+    --foreground: #fafaf9;
   }
 }
 
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better text rendering */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Selection styling */
+::selection {
+  background-color: rgb(214 211 209); /* stone-300 */
+}
+
+@media (prefers-color-scheme: dark) {
+  ::selection {
+    background-color: rgb(68 64 60); /* stone-700 */
+  }
+}
+
+/* Prose customizations */
+.prose p {
+  margin-bottom: 0;
 }
