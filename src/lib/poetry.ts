@@ -173,41 +173,68 @@ const ESSAY_CATALOG: EssayMetadata[] = [
 ];
 
 /**
- * Fetch full essay text from Wikisource API
+ * Simple HTML to text parser that extracts paragraph content
+ */
+function parseHtmlToParagraphs(html: string): string[] {
+  const paragraphs: string[] = [];
+
+  // Match <p> tags and extract their text content
+  const pTagRegex = /<p[^>]*>([\s\S]*?)<\/p>/gi;
+  let match;
+
+  while ((match = pTagRegex.exec(html)) !== null) {
+    let text = match[1]
+      // Remove HTML tags but keep text
+      .replace(/<[^>]+>/g, '')
+      // Decode common HTML entities
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&mdash;/g, '—')
+      .replace(/&ndash;/g, '–')
+      .replace(/&hellip;/g, '...')
+      .replace(/&#\d+;/g, '') // Remove other numeric entities
+      // Clean up whitespace
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Only include non-empty paragraphs with actual content
+    if (text.length > 20) {
+      paragraphs.push(text);
+    }
+  }
+
+  return paragraphs;
+}
+
+/**
+ * Fetch full essay text from Wikisource REST API
  */
 async function fetchEssayFromWikisource(wikisourceTitle: string): Promise<string[]> {
   try {
-    const apiUrl = `https://en.wikisource.org/w/api.php?action=query&titles=${encodeURIComponent(wikisourceTitle)}&prop=extracts&explaintext=true&format=json&origin=*`;
+    // Use the REST API which returns proper HTML with paragraph structure
+    const apiUrl = `https://en.wikisource.org/api/rest_v1/page/html/${encodeURIComponent(wikisourceTitle)}`;
 
     const response = await fetch(apiUrl, {
       next: { revalidate: 86400 }, // Cache for 24 hours
+      headers: {
+        'Accept': 'text/html',
+      },
     });
 
     if (!response.ok) {
       throw new Error(`Wikisource API error: ${response.status}`);
     }
 
-    const data = await response.json();
-    const pages = data.query?.pages;
+    const html = await response.text();
 
-    if (!pages) {
-      throw new Error('No pages in response');
-    }
+    // Parse HTML to extract paragraphs
+    const paragraphs = parseHtmlToParagraphs(html);
 
-    const pageId = Object.keys(pages)[0];
-    const extract = pages[pageId]?.extract;
-
-    if (!extract || pageId === '-1') {
-      throw new Error('Page not found');
-    }
-
-    // Split into paragraphs and clean up
-    const paragraphs = extract
-      .split(/\n\n+/)
-      .map((p: string) => p.trim())
-      .filter((p: string) => p.length > 0 && !p.startsWith('=='));
-
-    // Return a reasonable portion (first ~2000 words or 15 paragraphs)
+    // Return a reasonable portion (first ~2500 words or 25 paragraphs)
     let wordCount = 0;
     const result: string[] = [];
 
@@ -218,7 +245,7 @@ async function fetchEssayFromWikisource(wikisourceTitle: string): Promise<string
       }
       result.push(para);
       wordCount += words;
-      if (result.length >= 20) break;
+      if (result.length >= 25) break;
     }
 
     return result;
