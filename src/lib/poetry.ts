@@ -82,7 +82,7 @@ const ESSAY_CATALOG: EssayMetadata[] = [
   {
     title: 'Nature',
     author: 'Ralph Waldo Emerson',
-    wikisourceTitle: 'Nature_(1836)',
+    wikisourceTitle: 'Nature_(1836)/Introduction',
     source: 'Nature (1836)',
     sourceUrl: 'https://en.wikisource.org/wiki/Nature_(1836)',
   },
@@ -178,11 +178,17 @@ const ESSAY_CATALOG: EssayMetadata[] = [
 function parseHtmlToParagraphs(html: string): string[] {
   const paragraphs: string[] = [];
 
+  // Remove Wikisource navigation/metadata sections (class="ws-noexport")
+  let cleanedHtml = html
+    .replace(/<div[^>]*class="[^"]*ws-noexport[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<link[^>]*>/gi, '');
+
   // Match <p> tags and extract their text content
   const pTagRegex = /<p[^>]*>([\s\S]*?)<\/p>/gi;
   let match;
 
-  while ((match = pTagRegex.exec(html)) !== null) {
+  while ((match = pTagRegex.exec(cleanedHtml)) !== null) {
     let text = match[1]
       // Remove HTML tags but keep text
       .replace(/<[^>]+>/g, '')
@@ -196,13 +202,14 @@ function parseHtmlToParagraphs(html: string): string[] {
       .replace(/&mdash;/g, '—')
       .replace(/&ndash;/g, '–')
       .replace(/&hellip;/g, '...')
+      .replace(/&#32;/g, ' ')
       .replace(/&#\d+;/g, '') // Remove other numeric entities
       // Clean up whitespace
       .replace(/\s+/g, ' ')
       .trim();
 
-    // Only include non-empty paragraphs with actual content
-    if (text.length > 20) {
+    // Only include non-empty paragraphs with actual content (skip titles like "INTRODUCTION")
+    if (text.length > 50) {
       paragraphs.push(text);
     }
   }
