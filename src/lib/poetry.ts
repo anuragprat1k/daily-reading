@@ -82,9 +82,9 @@ const ESSAY_CATALOG: EssayMetadata[] = [
   {
     title: 'Nature',
     author: 'Ralph Waldo Emerson',
-    wikisourceTitle: 'Nature_(Emerson,_1836)',
+    wikisourceTitle: 'Nature_(1836)',
     source: 'Nature (1836)',
-    sourceUrl: 'https://en.wikisource.org/wiki/Nature_(Emerson,_1836)',
+    sourceUrl: 'https://en.wikisource.org/wiki/Nature_(1836)',
   },
   {
     title: 'Walking',
@@ -215,13 +215,14 @@ function parseHtmlToParagraphs(html: string): string[] {
  */
 async function fetchEssayFromWikisource(wikisourceTitle: string): Promise<string[]> {
   try {
-    // Use the REST API which returns proper HTML with paragraph structure
-    const apiUrl = `https://en.wikisource.org/api/rest_v1/page/html/${encodeURIComponent(wikisourceTitle)}`;
+    // Use the MediaWiki Action API which is more reliable
+    const apiUrl = `https://en.wikisource.org/w/api.php?action=parse&page=${encodeURIComponent(wikisourceTitle)}&prop=text&format=json&formatversion=2`;
 
     const response = await fetch(apiUrl, {
       next: { revalidate: 86400 }, // Cache for 24 hours
       headers: {
-        'Accept': 'text/html',
+        'Accept': 'application/json',
+        'User-Agent': 'DailyReadingApp/1.0 (https://github.com/daily-reading; contact@example.com)',
       },
     });
 
@@ -229,7 +230,13 @@ async function fetchEssayFromWikisource(wikisourceTitle: string): Promise<string
       throw new Error(`Wikisource API error: ${response.status}`);
     }
 
-    const html = await response.text();
+    const data = await response.json();
+
+    // Extract HTML from the MediaWiki API response
+    const html = data?.parse?.text || '';
+    if (!html) {
+      throw new Error('No text content in API response');
+    }
 
     // Parse HTML to extract paragraphs
     const paragraphs = parseHtmlToParagraphs(html);
