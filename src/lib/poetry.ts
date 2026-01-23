@@ -40,7 +40,7 @@ const ESSAY_CATALOG: EssayMetadata[] = [
   {
     title: 'On the Shortness of Life',
     author: 'Seneca',
-    wikisourceTitle: 'On_the_shortness_of_life',
+    wikisourceTitle: 'On_the_shortness_of_life/Chapter_I',
     source: 'De Brevitate Vitae (49 AD)',
     sourceUrl: 'https://en.wikisource.org/wiki/On_the_shortness_of_life',
   },
@@ -172,6 +172,37 @@ const ESSAY_CATALOG: EssayMetadata[] = [
   },
 ];
 
+// Patterns that indicate metadata rather than essay content
+const METADATA_PATTERNS = [
+  /^translated by/i,
+  /^translation by/i,
+  /^published by/i,
+  /^source:/i,
+  /^from wikisource/i,
+  /^this work/i,
+  /^this text/i,
+  /^copyright/i,
+  /^public domain/i,
+  /^originally published/i,
+  /^first published/i,
+  /^this edition/i,
+  /^editor['']?s note/i,
+  /^translator['']?s note/i,
+  /^\d{4}[-–]\d{4}$/, // Date ranges like "1932-2024"
+  /^ISBN/i,
+  /^OCLC/i,
+  /^chapter [IVXLCDM]+$/i, // Standalone chapter numbers
+  /^part [IVXLCDM]+$/i,
+  /^section [IVXLCDM]+$/i,
+];
+
+/**
+ * Check if a paragraph looks like metadata rather than essay content
+ */
+function isMetadataContent(text: string): boolean {
+  return METADATA_PATTERNS.some(pattern => pattern.test(text.trim()));
+}
+
 /**
  * Simple HTML to text parser that extracts paragraph content
  */
@@ -182,7 +213,10 @@ function parseHtmlToParagraphs(html: string): string[] {
   let cleanedHtml = html
     .replace(/<div[^>]*class="[^"]*ws-noexport[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '')
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/<link[^>]*>/gi, '');
+    .replace(/<link[^>]*>/gi, '')
+    // Remove header metadata sections
+    .replace(/<div[^>]*class="[^"]*header[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '')
+    .replace(/<div[^>]*id="[^"]*headerContainer[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
 
   // Match <p> tags and extract their text content
   const pTagRegex = /<p[^>]*>([\s\S]*?)<\/p>/gi;
@@ -208,8 +242,9 @@ function parseHtmlToParagraphs(html: string): string[] {
       .replace(/\s+/g, ' ')
       .trim();
 
-    // Only include non-empty paragraphs with actual content (skip titles like "INTRODUCTION")
-    if (text.length > 50) {
+    // Only include non-empty paragraphs with actual content
+    // Skip short text (titles, headers) and metadata
+    if (text.length > 50 && !isMetadataContent(text)) {
       paragraphs.push(text);
     }
   }
