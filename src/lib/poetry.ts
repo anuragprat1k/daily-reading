@@ -256,18 +256,20 @@ async function fetchEssayFromWikisource(wikisourceTitle: string): Promise<EssayC
     // Parse HTML to extract paragraphs
     const paragraphs = parseHtmlToParagraphs(html);
 
-    // Create a snippet (first ~2500 words or 25 paragraphs)
+    // Create a snippet (minimum 1000 words, up to ~2500 words or 25 paragraphs)
+    const MIN_WORDS = 1000;
     let wordCount = 0;
     const snippet: string[] = [];
 
     for (const para of paragraphs) {
       const words = para.split(/\s+/).length;
-      if (wordCount + words > 2500 && snippet.length > 5) {
+      // Only stop after reaching minimum word count
+      if (wordCount >= MIN_WORDS && wordCount + words > 2500 && snippet.length > 5) {
         break;
       }
       snippet.push(para);
       wordCount += words;
-      if (snippet.length >= 25) break;
+      if (wordCount >= MIN_WORDS && snippet.length >= 25) break;
     }
 
     const isTruncated = snippet.length < paragraphs.length;
