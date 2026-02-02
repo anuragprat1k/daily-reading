@@ -17,6 +17,8 @@ export interface Reading {
   content: string[];
   source?: string;
   sourceUrl?: string;
+  isTruncated?: boolean;
+  fullContent?: string[];
 }
 
 // Essay metadata - we fetch full text dynamically from Wikisource
@@ -179,7 +181,7 @@ function parseHtmlToParagraphs(html: string): string[] {
   const paragraphs: string[] = [];
 
   // Remove Wikisource navigation/metadata sections (class="ws-noexport")
-  let cleanedHtml = html
+  const cleanedHtml = html
     .replace(/<div[^>]*class="[^"]*ws-noexport[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '')
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
     .replace(/<link[^>]*>/gi, '');
@@ -189,7 +191,7 @@ function parseHtmlToParagraphs(html: string): string[] {
   let match;
 
   while ((match = pTagRegex.exec(cleanedHtml)) !== null) {
-    let text = match[1]
+    const text = match[1]
       // Remove HTML tags but keep text
       .replace(/<[^>]+>/g, '')
       // Decode common HTML entities
@@ -217,10 +219,16 @@ function parseHtmlToParagraphs(html: string): string[] {
   return paragraphs;
 }
 
+interface EssayContent {
+  snippet: string[];
+  fullContent: string[];
+  isTruncated: boolean;
+}
+
 /**
  * Fetch full essay text from Wikisource REST API
  */
-async function fetchEssayFromWikisource(wikisourceTitle: string): Promise<string[]> {
+async function fetchEssayFromWikisource(wikisourceTitle: string): Promise<EssayContent> {
   try {
     // Use the MediaWiki Action API which is more reliable
     const apiUrl = `https://en.wikisource.org/w/api.php?action=parse&page=${encodeURIComponent(wikisourceTitle)}&prop=text&format=json&formatversion=2`;
@@ -248,24 +256,30 @@ async function fetchEssayFromWikisource(wikisourceTitle: string): Promise<string
     // Parse HTML to extract paragraphs
     const paragraphs = parseHtmlToParagraphs(html);
 
-    // Return a reasonable portion (first ~2500 words or 25 paragraphs)
+    // Create a snippet (first ~2500 words or 25 paragraphs)
     let wordCount = 0;
-    const result: string[] = [];
+    const snippet: string[] = [];
 
     for (const para of paragraphs) {
       const words = para.split(/\s+/).length;
-      if (wordCount + words > 2500 && result.length > 5) {
+      if (wordCount + words > 2500 && snippet.length > 5) {
         break;
       }
-      result.push(para);
+      snippet.push(para);
       wordCount += words;
-      if (result.length >= 25) break;
+      if (snippet.length >= 25) break;
     }
 
-    return result;
+    const isTruncated = snippet.length < paragraphs.length;
+
+    return {
+      snippet,
+      fullContent: paragraphs,
+      isTruncated,
+    };
   } catch (error) {
     console.error(`Failed to fetch essay "${wikisourceTitle}":`, error);
-    return [];
+    return { snippet: [], fullContent: [], isTruncated: false };
   }
 }
 
@@ -282,17 +296,19 @@ async function getEssay(metadata: EssayMetadata): Promise<Reading> {
     return essayCache.get(cacheKey)!;
   }
 
-  const content = await fetchEssayFromWikisource(metadata.wikisourceTitle);
+  const { snippet, fullContent, isTruncated } = await fetchEssayFromWikisource(metadata.wikisourceTitle);
 
   const essay: Reading = {
     type: 'essay',
     title: metadata.title,
     author: metadata.author,
-    content: content.length > 0 ? content : [
+    content: snippet.length > 0 ? snippet : [
       'This essay could not be loaded at this time. Please check back later.',
     ],
     source: metadata.source,
     sourceUrl: metadata.sourceUrl,
+    isTruncated,
+    fullContent: isTruncated ? fullContent : undefined,
   };
 
   // Cache it

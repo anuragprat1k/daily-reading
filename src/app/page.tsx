@@ -1,4 +1,5 @@
 import { getDailyReadings, Reading } from '@/lib/poetry';
+import ExpandableContent from './components/ExpandableContent';
 
 export const revalidate = 3600; // Revalidate every hour
 
@@ -20,23 +21,12 @@ function ReadingSection({ reading, label }: { reading: Reading; label: string })
 
       {/* Content */}
       <article className="prose prose-stone prose-lg dark:prose-invert max-w-none">
-        {reading.type === 'poem' ? (
-          <div className="space-y-1 font-serif text-xl leading-relaxed">
-            {reading.content.map((line, index) => (
-              <p key={index} className={line === '' ? 'h-6' : 'my-0'}>
-                {line || '\u00A0'}
-              </p>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-6 font-serif text-xl leading-relaxed">
-            {reading.content.map((paragraph, index) => (
-              <p key={index} className="text-stone-700 dark:text-stone-300">
-                {paragraph}
-              </p>
-            ))}
-          </div>
-        )}
+        <ExpandableContent
+          type={reading.type}
+          content={reading.content}
+          fullContent={reading.fullContent}
+          isTruncated={reading.isTruncated}
+        />
       </article>
 
       {/* Source */}
