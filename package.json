@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "fetch-essays": "tsx scripts/fetch-essays.ts"
+    "fetch-essays": "tsx scripts/fetch-essays.ts",
+    "fetch-poems": "tsx scripts/fetch-poems.ts",
+    "fetch-content": "npm run fetch-essays && npm run fetch-poems"
   },
   "dependencies": {
     "next": "16.1.3",

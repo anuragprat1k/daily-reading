@@ -1,17 +1,12 @@
 /**
- * Poetry and essay fetching utilities
- * Uses PoetryDB API for poems and pre-stored essays from JSON
+ * Poetry and essay utilities
+ * Uses pre-stored poems and essays from JSON databases
  */
 
 import essayDatabase from '@/data/essays/essays.json';
+import poemDatabase from '@/data/poems/poems.json';
 import type { StoredEssay, EssayDatabase } from '@/data/essays';
-
-export interface Poem {
-  title: string;
-  author: string;
-  lines: string[];
-  linecount: string;
-}
+import type { StoredPoem, PoemDatabase } from '@/data/poems';
 
 export interface Reading {
   type: 'poem' | 'essay';
@@ -96,60 +91,38 @@ function getEssayIds(): string[] {
   return db.essays.map(e => e.id);
 }
 
-// Curated list of famous poets to fetch from PoetryDB
-const FEATURED_POETS = [
-  'Emily Dickinson',
-  'Robert Frost',
-  'William Shakespeare',
-  'Walt Whitman',
-  'William Blake',
-  'John Keats',
-  'Percy Bysshe Shelley',
-  'William Wordsworth',
-  'Edgar Allan Poe',
-  'Langston Hughes',
-  'Maya Angelou',
-  'Sylvia Plath',
-  'W.B. Yeats',
-  'T.S. Eliot',
-  'Rumi',
-];
+/**
+ * Get all poems from the database
+ */
+function getStoredPoems(): StoredPoem[] {
+  const db = poemDatabase as PoemDatabase;
+  return db.poems;
+}
 
 /**
- * Fetch poems from PoetryDB API
+ * Get a poem as a Reading object
  */
-export async function fetchPoems(): Promise<Poem[]> {
-  try {
-    // Fetch poems from multiple featured poets
-    const allPoems: Poem[] = [];
+function getPoem(poemId: string): Reading {
+  const db = poemDatabase as PoemDatabase;
+  const poem = db.poems.find(p => p.id === poemId);
 
-    for (const poet of FEATURED_POETS.slice(0, 10)) {
-      try {
-        const response = await fetch(
-          `https://poetrydb.org/author/${encodeURIComponent(poet)}/title,author,lines,linecount`,
-          { next: { revalidate: 86400 } } // Cache for 24 hours
-        );
-
-        if (response.ok) {
-          const poems = await response.json();
-          if (Array.isArray(poems)) {
-            // Filter to poems with reasonable length (4-50 lines)
-            const filtered = poems.filter(
-              (p: Poem) => parseInt(p.linecount) >= 4 && parseInt(p.linecount) <= 50
-            );
-            allPoems.push(...filtered.slice(0, 10)); // Take up to 10 per poet
-          }
-        }
-      } catch {
-        // Continue if one poet fails
-      }
-    }
-
-    return allPoems;
-  } catch (error) {
-    console.error('Failed to fetch poems:', error);
-    return [];
+  if (!poem) {
+    return {
+      type: 'poem',
+      title: 'Poem Unavailable',
+      author: 'Unknown',
+      content: ['This poem is temporarily unavailable.'],
+    };
   }
+
+  return {
+    type: 'poem',
+    title: poem.title,
+    author: poem.author,
+    content: poem.lines,
+    source: 'PoetryDB',
+    sourceUrl: 'https://poetrydb.org',
+  };
 }
 
 export interface DailyReadings {
@@ -161,44 +134,22 @@ export interface DailyReadings {
  * Get a deterministic daily poem and essay based on the date
  * Same readings for everyone on the same day
  */
-export async function getDailyReadings(date: Date = new Date()): Promise<DailyReadings> {
+export function getDailyReadings(date: Date = new Date()): DailyReadings {
   // Create a seed from the date (YYYYMMDD format)
   const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
   const seed = parseInt(dateStr, 10);
 
-  // Fetch poems from PoetryDB
-  const poems = await fetchPoems();
-
-  // Convert poems to Reading format
-  const poemReadings: Reading[] = poems.map((poem) => ({
-    type: 'poem' as const,
-    title: poem.title,
-    author: poem.author,
-    content: poem.lines,
-    source: 'PoetryDB',
-    sourceUrl: 'https://poetrydb.org',
-  }));
-
-  // Get essay IDs from stored database
+  // Get poems and essays from stored databases
+  const poems = getStoredPoems();
   const essayIds = getEssayIds();
 
   // Use different seeds for poem and essay to get variety
-  const poemIndex = seed % Math.max(poemReadings.length, 1);
+  const poemIndex = seed % poems.length;
   const essayIndex = (seed * 7) % essayIds.length;
 
-  const poem = poemReadings[poemIndex] || {
-    type: 'poem' as const,
-    title: 'Hope is the thing with feathers',
-    author: 'Emily Dickinson',
-    content: [
-      'Hope is the thing with feathers',
-      'That perches in the soul,',
-      'And sings the tune without the words,',
-      'And never stops at all,',
-    ],
-    source: 'PoetryDB',
-    sourceUrl: 'https://poetrydb.org',
-  };
+  // Get poem from stored database
+  const poemId = poems[poemIndex].id;
+  const poem = getPoem(poemId);
 
   // Get essay from stored database
   const essayId = essayIds[essayIndex];
@@ -211,7 +162,7 @@ export async function getDailyReadings(date: Date = new Date()): Promise<DailyRe
  * Get a deterministic daily reading based on the date (legacy, returns single reading)
  * Same reading for everyone on the same day
  */
-export async function getDailyReading(date: Date = new Date()): Promise<Reading> {
-  const { poem } = await getDailyReadings(date);
+export function getDailyReading(date: Date = new Date()): Reading {
+  const { poem } = getDailyReadings(date);
   return poem;
 }
