@@ -420,9 +420,32 @@ export async function getDailyReadings(date: Date = new Date()): Promise<DailyRe
     sourceUrl: 'https://poetrydb.org',
   };
 
-  // Fetch the full essay text from Wikisource
-  const essayMetadata = ESSAY_CATALOG[essayIndex];
-  const essay = await getEssay(essayMetadata);
+  // Fetch essays until we find one with at least 1000 words
+  const MIN_ESSAY_WORDS = 1000;
+  let essay: Reading | null = null;
+
+  for (let i = 0; i < ESSAY_CATALOG.length; i++) {
+    const candidateIndex = (essayIndex + i) % ESSAY_CATALOG.length;
+    const essayMetadata = ESSAY_CATALOG[candidateIndex];
+    const candidateEssay = await getEssay(essayMetadata);
+
+    // Count words in the essay content
+    const wordCount = candidateEssay.content.reduce(
+      (sum, para) => sum + para.split(/\s+/).length,
+      0
+    );
+
+    if (wordCount >= MIN_ESSAY_WORDS) {
+      essay = candidateEssay;
+      break;
+    }
+  }
+
+  // Fallback if no essay meets the minimum (shouldn't happen with our catalog)
+  if (!essay) {
+    const essayMetadata = ESSAY_CATALOG[essayIndex];
+    essay = await getEssay(essayMetadata);
+  }
 
   return { poem, essay };
 }
