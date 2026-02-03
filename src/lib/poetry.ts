@@ -1,7 +1,10 @@
 /**
  * Poetry and essay fetching utilities
- * Uses PoetryDB API for poems and curated essays
+ * Uses PoetryDB API for poems and pre-stored essays from JSON
  */
+
+import essayDatabase from '@/data/essays/essays.json';
+import type { StoredEssay, EssayDatabase } from '@/data/essays';
 
 export interface Poem {
   title: string;
@@ -21,302 +24,76 @@ export interface Reading {
   fullContent?: string[];
 }
 
-// Essay metadata - we fetch full text dynamically from Wikisource
-interface EssayMetadata {
-  title: string;
-  author: string;
-  wikisourceTitle: string; // The exact Wikisource page title
-  source: string;
-  sourceUrl?: string;
-}
-
-const ESSAY_CATALOG: EssayMetadata[] = [
-  // Short classic essays that work well for daily reading
-  {
-    title: 'Self-Reliance',
-    author: 'Ralph Waldo Emerson',
-    wikisourceTitle: 'Essays:_First_Series/Self-Reliance',
-    source: 'Essays: First Series (1841)',
-    sourceUrl: 'https://en.wikisource.org/wiki/Essays:_First_Series/Self-Reliance',
-  },
-  {
-    title: 'On the Shortness of Life',
-    author: 'Seneca',
-    wikisourceTitle: 'On_the_shortness_of_life',
-    source: 'De Brevitate Vitae (49 AD)',
-    sourceUrl: 'https://en.wikisource.org/wiki/On_the_shortness_of_life',
-  },
-  {
-    title: 'Civil Disobedience',
-    author: 'Henry David Thoreau',
-    wikisourceTitle: 'Civil_Disobedience',
-    source: 'Resistance to Civil Government (1849)',
-    sourceUrl: 'https://en.wikisource.org/wiki/Civil_Disobedience',
-  },
-  {
-    title: 'Of Studies',
-    author: 'Francis Bacon',
-    wikisourceTitle: 'The_Essays_of_Francis_Bacon/L_Of_Studies',
-    source: 'Essays (1625)',
-    sourceUrl: 'https://en.wikisource.org/wiki/The_Essays_of_Francis_Bacon/L_Of_Studies',
-  },
-  {
-    title: 'Of Truth',
-    author: 'Francis Bacon',
-    wikisourceTitle: 'The_Essays_of_Francis_Bacon/I_Of_Truth',
-    source: 'Essays (1625)',
-    sourceUrl: 'https://en.wikisource.org/wiki/The_Essays_of_Francis_Bacon/I_Of_Truth',
-  },
-  {
-    title: 'A Modest Proposal',
-    author: 'Jonathan Swift',
-    wikisourceTitle: 'A_Modest_Proposal',
-    source: 'A Modest Proposal (1729)',
-    sourceUrl: 'https://en.wikisource.org/wiki/A_Modest_Proposal',
-  },
-  {
-    title: 'The Philosophy of Composition',
-    author: 'Edgar Allan Poe',
-    wikisourceTitle: 'The_Philosophy_of_Composition',
-    source: "Graham's Magazine (1846)",
-    sourceUrl: 'https://en.wikisource.org/wiki/The_Philosophy_of_Composition',
-  },
-  {
-    title: 'Nature',
-    author: 'Ralph Waldo Emerson',
-    wikisourceTitle: 'Nature_(1836)/Introduction',
-    source: 'Nature (1836)',
-    sourceUrl: 'https://en.wikisource.org/wiki/Nature_(1836)',
-  },
-  {
-    title: 'Walking',
-    author: 'Henry David Thoreau',
-    wikisourceTitle: 'Walking_(Thoreau)',
-    source: 'The Atlantic Monthly (1862)',
-    sourceUrl: 'https://en.wikisource.org/wiki/Walking_(Thoreau)',
-  },
-  {
-    title: 'The American Scholar',
-    author: 'Ralph Waldo Emerson',
-    wikisourceTitle: 'The_American_Scholar',
-    source: 'Phi Beta Kappa Address (1837)',
-    sourceUrl: 'https://en.wikisource.org/wiki/The_American_Scholar',
-  },
-  {
-    title: 'Of Friendship',
-    author: 'Francis Bacon',
-    wikisourceTitle: 'The_Essays_of_Francis_Bacon/XXVII_Of_Friendship',
-    source: 'Essays (1625)',
-    sourceUrl: 'https://en.wikisource.org/wiki/The_Essays_of_Francis_Bacon/XXVII_Of_Friendship',
-  },
-  {
-    title: 'Compensation',
-    author: 'Ralph Waldo Emerson',
-    wikisourceTitle: 'Essays:_First_Series/Compensation',
-    source: 'Essays: First Series (1841)',
-    sourceUrl: 'https://en.wikisource.org/wiki/Essays:_First_Series/Compensation',
-  },
-  {
-    title: 'The Over-Soul',
-    author: 'Ralph Waldo Emerson',
-    wikisourceTitle: 'Essays:_First_Series/The_Over-Soul',
-    source: 'Essays: First Series (1841)',
-    sourceUrl: 'https://en.wikisource.org/wiki/Essays:_First_Series/The_Over-Soul',
-  },
-  {
-    title: 'Experience',
-    author: 'Ralph Waldo Emerson',
-    wikisourceTitle: 'Essays:_Second_Series/Experience',
-    source: 'Essays: Second Series (1844)',
-    sourceUrl: 'https://en.wikisource.org/wiki/Essays:_Second_Series/Experience',
-  },
-  {
-    title: 'Of Revenge',
-    author: 'Francis Bacon',
-    wikisourceTitle: 'The_Essays_of_Francis_Bacon/IV_Of_Revenge',
-    source: 'Essays (1625)',
-    sourceUrl: 'https://en.wikisource.org/wiki/The_Essays_of_Francis_Bacon/IV_Of_Revenge',
-  },
-  {
-    title: 'Of Death',
-    author: 'Francis Bacon',
-    wikisourceTitle: 'The_Essays_of_Francis_Bacon/II_Of_Death',
-    source: 'Essays (1625)',
-    sourceUrl: 'https://en.wikisource.org/wiki/The_Essays_of_Francis_Bacon/II_Of_Death',
-  },
-  {
-    title: 'Of Love',
-    author: 'Francis Bacon',
-    wikisourceTitle: 'The_Essays_of_Francis_Bacon/X_Of_Love',
-    source: 'Essays (1625)',
-    sourceUrl: 'https://en.wikisource.org/wiki/The_Essays_of_Francis_Bacon/X_Of_Love',
-  },
-  {
-    title: 'Of Great Place',
-    author: 'Francis Bacon',
-    wikisourceTitle: 'The_Essays_of_Francis_Bacon/XI_Of_Great_Place',
-    source: 'Essays (1625)',
-    sourceUrl: 'https://en.wikisource.org/wiki/The_Essays_of_Francis_Bacon/XI_Of_Great_Place',
-  },
-  {
-    title: 'Of Adversity',
-    author: 'Francis Bacon',
-    wikisourceTitle: 'The_Essays_of_Francis_Bacon/V_Of_Adversity',
-    source: 'Essays (1625)',
-    sourceUrl: 'https://en.wikisource.org/wiki/The_Essays_of_Francis_Bacon/V_Of_Adversity',
-  },
-  {
-    title: 'Circles',
-    author: 'Ralph Waldo Emerson',
-    wikisourceTitle: 'Essays:_First_Series/Circles',
-    source: 'Essays: First Series (1841)',
-    sourceUrl: 'https://en.wikisource.org/wiki/Essays:_First_Series/Circles',
-  },
-];
-
 /**
- * Simple HTML to text parser that extracts paragraph content
+ * Create a snippet from full essay content
  */
-function parseHtmlToParagraphs(html: string): string[] {
-  const paragraphs: string[] = [];
+function createSnippet(paragraphs: string[]): { snippet: string[]; isTruncated: boolean } {
+  const MIN_WORDS = 1000;
+  const MAX_WORDS = 2500;
+  const MAX_PARAGRAPHS = 25;
 
-  // Remove Wikisource navigation/metadata sections (class="ws-noexport")
-  const cleanedHtml = html
-    .replace(/<div[^>]*class="[^"]*ws-noexport[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '')
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/<link[^>]*>/gi, '');
+  let wordCount = 0;
+  const snippet: string[] = [];
 
-  // Match <p> tags and extract their text content
-  const pTagRegex = /<p[^>]*>([\s\S]*?)<\/p>/gi;
-  let match;
-
-  while ((match = pTagRegex.exec(cleanedHtml)) !== null) {
-    const text = match[1]
-      // Remove HTML tags but keep text
-      .replace(/<[^>]+>/g, '')
-      // Decode common HTML entities
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&mdash;/g, '—')
-      .replace(/&ndash;/g, '–')
-      .replace(/&hellip;/g, '...')
-      .replace(/&#32;/g, ' ')
-      .replace(/&#\d+;/g, '') // Remove other numeric entities
-      // Clean up whitespace
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    // Only include non-empty paragraphs with actual content (skip titles like "INTRODUCTION")
-    if (text.length > 50) {
-      paragraphs.push(text);
+  for (const para of paragraphs) {
+    const words = para.split(/\s+/).length;
+    if (wordCount >= MIN_WORDS && wordCount + words > MAX_WORDS && snippet.length > 5) {
+      break;
     }
+    snippet.push(para);
+    wordCount += words;
+    if (wordCount >= MIN_WORDS && snippet.length >= MAX_PARAGRAPHS) break;
   }
 
-  return paragraphs;
-}
-
-interface EssayContent {
-  snippet: string[];
-  fullContent: string[];
-  isTruncated: boolean;
-}
-
-/**
- * Fetch full essay text from Wikisource REST API
- */
-async function fetchEssayFromWikisource(wikisourceTitle: string): Promise<EssayContent> {
-  try {
-    // Use the MediaWiki Action API which is more reliable
-    const apiUrl = `https://en.wikisource.org/w/api.php?action=parse&page=${encodeURIComponent(wikisourceTitle)}&prop=text&format=json&formatversion=2`;
-
-    const response = await fetch(apiUrl, {
-      next: { revalidate: 86400 }, // Cache for 24 hours
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'DailyReadingApp/1.0 (https://github.com/daily-reading; contact@example.com)',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Wikisource API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    // Extract HTML from the MediaWiki API response
-    const html = data?.parse?.text || '';
-    if (!html) {
-      throw new Error('No text content in API response');
-    }
-
-    // Parse HTML to extract paragraphs
-    const paragraphs = parseHtmlToParagraphs(html);
-
-    // Create a snippet (minimum 1000 words, up to ~2500 words or 25 paragraphs)
-    const MIN_WORDS = 1000;
-    let wordCount = 0;
-    const snippet: string[] = [];
-
-    for (const para of paragraphs) {
-      const words = para.split(/\s+/).length;
-      // Only stop after reaching minimum word count
-      if (wordCount >= MIN_WORDS && wordCount + words > 2500 && snippet.length > 5) {
-        break;
-      }
-      snippet.push(para);
-      wordCount += words;
-      if (wordCount >= MIN_WORDS && snippet.length >= 25) break;
-    }
-
-    const isTruncated = snippet.length < paragraphs.length;
-
-    return {
-      snippet,
-      fullContent: paragraphs,
-      isTruncated,
-    };
-  } catch (error) {
-    console.error(`Failed to fetch essay "${wikisourceTitle}":`, error);
-    return { snippet: [], fullContent: [], isTruncated: false };
-  }
-}
-
-// Cache for fetched essays
-const essayCache = new Map<string, Reading>();
-
-/**
- * Get a specific essay with full text
- */
-async function getEssay(metadata: EssayMetadata): Promise<Reading> {
-  // Check cache first
-  const cacheKey = metadata.wikisourceTitle;
-  if (essayCache.has(cacheKey)) {
-    return essayCache.get(cacheKey)!;
-  }
-
-  const { snippet, fullContent, isTruncated } = await fetchEssayFromWikisource(metadata.wikisourceTitle);
-
-  const essay: Reading = {
-    type: 'essay',
-    title: metadata.title,
-    author: metadata.author,
-    content: snippet.length > 0 ? snippet : [
-      'This essay could not be loaded at this time. Please check back later.',
-    ],
-    source: metadata.source,
-    sourceUrl: metadata.sourceUrl,
-    isTruncated,
-    fullContent: isTruncated ? fullContent : undefined,
+  return {
+    snippet,
+    isTruncated: snippet.length < paragraphs.length,
   };
+}
 
-  // Cache it
-  essayCache.set(cacheKey, essay);
+/**
+ * Get a stored essay by its ID
+ */
+function getStoredEssay(id: string): StoredEssay | undefined {
+  const db = essayDatabase as EssayDatabase;
+  return db.essays.find(e => e.id === id);
+}
 
-  return essay;
+/**
+ * Get an essay from the stored database
+ */
+function getEssay(essayId: string): Reading {
+  const storedEssay = getStoredEssay(essayId);
+
+  if (!storedEssay || storedEssay.paragraphs.length === 0) {
+    return {
+      type: 'essay',
+      title: 'Essay Unavailable',
+      author: 'Unknown',
+      content: ['This essay is temporarily unavailable. Please check back later.'],
+    };
+  }
+
+  const { snippet, isTruncated } = createSnippet(storedEssay.paragraphs);
+
+  return {
+    type: 'essay',
+    title: storedEssay.title,
+    author: storedEssay.author,
+    content: snippet,
+    source: storedEssay.source,
+    sourceUrl: storedEssay.sourceUrl,
+    isTruncated,
+    fullContent: isTruncated ? storedEssay.paragraphs : undefined,
+  };
+}
+
+/**
+ * Get all essay IDs from the database
+ */
+function getEssayIds(): string[] {
+  const db = essayDatabase as EssayDatabase;
+  return db.essays.map(e => e.id);
 }
 
 // Curated list of famous poets to fetch from PoetryDB
@@ -389,7 +166,7 @@ export async function getDailyReadings(date: Date = new Date()): Promise<DailyRe
   const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
   const seed = parseInt(dateStr, 10);
 
-  // Fetch poems and essay in parallel
+  // Fetch poems from PoetryDB
   const poems = await fetchPoems();
 
   // Convert poems to Reading format
@@ -402,9 +179,12 @@ export async function getDailyReadings(date: Date = new Date()): Promise<DailyRe
     sourceUrl: 'https://poetrydb.org',
   }));
 
+  // Get essay IDs from stored database
+  const essayIds = getEssayIds();
+
   // Use different seeds for poem and essay to get variety
   const poemIndex = seed % Math.max(poemReadings.length, 1);
-  const essayIndex = (seed * 7) % ESSAY_CATALOG.length; // Use different multiplier for variety
+  const essayIndex = (seed * 7) % essayIds.length;
 
   const poem = poemReadings[poemIndex] || {
     type: 'poem' as const,
@@ -420,9 +200,9 @@ export async function getDailyReadings(date: Date = new Date()): Promise<DailyRe
     sourceUrl: 'https://poetrydb.org',
   };
 
-  // Fetch the full essay text from Wikisource
-  const essayMetadata = ESSAY_CATALOG[essayIndex];
-  const essay = await getEssay(essayMetadata);
+  // Get essay from stored database
+  const essayId = essayIds[essayIndex];
+  const essay = getEssay(essayId);
 
   return { poem, essay };
 }
@@ -434,11 +214,4 @@ export async function getDailyReadings(date: Date = new Date()): Promise<DailyRe
 export async function getDailyReading(date: Date = new Date()): Promise<Reading> {
   const { poem } = await getDailyReadings(date);
   return poem;
-}
-
-/**
- * Get the essay catalog metadata
- */
-export function getEssayCatalog(): EssayMetadata[] {
-  return ESSAY_CATALOG;
 }
