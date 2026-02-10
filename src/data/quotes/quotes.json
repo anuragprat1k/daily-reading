@@ -1,0 +1,256 @@
+{
+  "version": 1,
+  "lastUpdated": "2026-02-10T00:00:00.000Z",
+  "quotes": [
+    {
+      "id": "courage-hemingway-grace",
+      "text": "Courage is grace under pressure.",
+      "author": "Ernest Hemingway"
+    },
+    {
+      "id": "courage-twain-fear",
+      "text": "Courage is resistance to fear, mastery of fear — not absence of fear.",
+      "author": "Mark Twain"
+    },
+    {
+      "id": "courage-churchill-continue",
+      "text": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+      "author": "Winston Churchill"
+    },
+    {
+      "id": "courage-mandela-triumph",
+      "text": "I learned that courage was not the absence of fear, but the triumph over it. The brave man is not he who does not feel afraid, but he who conquers that fear.",
+      "author": "Nelson Mandela"
+    },
+    {
+      "id": "courage-angelou-virtue",
+      "text": "Courage is the most important of all the virtues because without courage, you can't practice any other virtue consistently.",
+      "author": "Maya Angelou"
+    },
+    {
+      "id": "courage-emerson-secret",
+      "text": "The secret of courage is that you don't have to feel it to act with it. What a new face courage puts on everything!",
+      "author": "Ralph Waldo Emerson"
+    },
+    {
+      "id": "courage-tolkien-small",
+      "text": "Some believe it is only great power that can hold evil in check, but that is not what I have found. It is the small everyday deeds of ordinary folk that keep the darkness at bay. Small acts of kindness and love.",
+      "author": "J.R.R. Tolkien"
+    },
+    {
+      "id": "courage-roosevelt-arena",
+      "text": "It is not the critic who counts; not the man who points out how the strong man stumbles, or where the doer of deeds could have done them better. The credit belongs to the man who is actually in the arena.",
+      "author": "Theodore Roosevelt"
+    },
+    {
+      "id": "courage-bronte-soul",
+      "text": "I am no bird; and no net ensnares me: I am a free human being with an independent will.",
+      "author": "Charlotte Bront\u00eb"
+    },
+    {
+      "id": "courage-king-right",
+      "text": "The time is always right to do what is right.",
+      "author": "Martin Luther King Jr."
+    },
+    {
+      "id": "courage-aurelius-control",
+      "text": "You have power over your mind — not outside events. Realize this, and you will find strength.",
+      "author": "Marcus Aurelius"
+    },
+    {
+      "id": "courage-eleanor-fear",
+      "text": "You gain strength, courage, and confidence by every experience in which you really stop to look fear in the face. You must do the thing which you think you cannot do.",
+      "author": "Eleanor Roosevelt"
+    },
+    {
+      "id": "courage-seneca-brave",
+      "text": "It is not because things are difficult that we do not dare; it is because we do not dare that things are difficult.",
+      "author": "Seneca"
+    },
+    {
+      "id": "courage-thoreau-drum",
+      "text": "If a man does not keep pace with his companions, perhaps it is because he hears a different drummer. Let him step to the music which he hears, however measured or far away.",
+      "author": "Henry David Thoreau"
+    },
+    {
+      "id": "courage-keller-adventure",
+      "text": "Life is either a daring adventure or nothing at all.",
+      "author": "Helen Keller"
+    },
+    {
+      "id": "courage-gandhi-change",
+      "text": "You must be the change you wish to see in the world.",
+      "author": "Mahatma Gandhi"
+    },
+    {
+      "id": "courage-shakespeare-brave",
+      "text": "Cowards die many times before their deaths; the valiant never taste of death but once.",
+      "author": "William Shakespeare"
+    },
+    {
+      "id": "courage-plato-mind",
+      "text": "Courage is knowing what not to fear.",
+      "author": "Plato"
+    },
+    {
+      "id": "courage-lee-real",
+      "text": "Real courage is when you know you're licked before you begin, but you begin anyway and see it through no matter what.",
+      "author": "Harper Lee"
+    },
+    {
+      "id": "courage-frankl-meaning",
+      "text": "When we are no longer able to change a situation, we are challenged to change ourselves.",
+      "author": "Viktor Frankl"
+    },
+    {
+      "id": "courage-camus-winter",
+      "text": "In the midst of winter, I found there was, within me, an invincible summer.",
+      "author": "Albert Camus"
+    },
+    {
+      "id": "courage-epictetus-obstacle",
+      "text": "It's not what happens to you, but how you react to it that matters.",
+      "author": "Epictetus"
+    },
+    {
+      "id": "courage-parks-tired",
+      "text": "I have learned over the years that when one's mind is made up, this diminishes fear; knowing what must be done does away with fear.",
+      "author": "Rosa Parks"
+    },
+    {
+      "id": "courage-dickinson-hope",
+      "text": "Hope is the thing with feathers that perches in the soul, and sings the tune without the words, and never stops at all.",
+      "author": "Emily Dickinson"
+    },
+    {
+      "id": "courage-dostoevsky-new-step",
+      "text": "Taking a new step, uttering a new word, is what people fear most.",
+      "author": "Fyodor Dostoevsky"
+    },
+    {
+      "id": "courage-sophocles-attempt",
+      "text": "Fortune is not on the side of the faint-hearted.",
+      "author": "Sophocles"
+    },
+    {
+      "id": "courage-frost-road",
+      "text": "Two roads diverged in a wood, and I — I took the one less traveled by, and that has made all the difference.",
+      "author": "Robert Frost"
+    },
+    {
+      "id": "courage-tubman-liberty",
+      "text": "Every great dream begins with a dreamer. Always remember, you have within you the strength, the patience, and the passion to reach for the stars to change the world.",
+      "author": "Harriet Tubman"
+    },
+    {
+      "id": "courage-nietzsche-abyss",
+      "text": "He who has a why to live for can bear almost any how.",
+      "author": "Friedrich Nietzsche"
+    },
+    {
+      "id": "courage-earhart-act",
+      "text": "The most difficult thing is the decision to act, the rest is merely tenacity.",
+      "author": "Amelia Earhart"
+    },
+    {
+      "id": "courage-confucius-go-on",
+      "text": "It does not matter how slowly you go as long as you do not stop.",
+      "author": "Confucius"
+    },
+    {
+      "id": "courage-teresa-anyway",
+      "text": "Be faithful in small things because it is in them that your strength lies.",
+      "author": "Mother Teresa"
+    },
+    {
+      "id": "courage-whitman-contribute",
+      "text": "That the powerful play goes on, and you may contribute a verse.",
+      "author": "Walt Whitman"
+    },
+    {
+      "id": "courage-kierkegaard-leap",
+      "text": "To dare is to lose one's footing momentarily. Not to dare is to lose oneself.",
+      "author": "S\u00f8ren Kierkegaard"
+    },
+    {
+      "id": "courage-lao-tzu-journey",
+      "text": "Being deeply loved by someone gives you strength, while loving someone deeply gives you courage.",
+      "author": "Lao Tzu"
+    },
+    {
+      "id": "courage-anthony-failure",
+      "text": "Failure is impossible.",
+      "author": "Susan B. Anthony"
+    },
+    {
+      "id": "courage-hugo-daring",
+      "text": "Have courage for the great sorrows of life and patience for the small ones; and when you have laboriously accomplished your daily task, go to sleep in peace. God is awake.",
+      "author": "Victor Hugo"
+    },
+    {
+      "id": "courage-lennon-dream",
+      "text": "A dream you dream alone is only a dream. A dream you dream together is reality.",
+      "author": "John Lennon"
+    },
+    {
+      "id": "courage-cicero-perseverance",
+      "text": "A man of courage is also full of faith.",
+      "author": "Marcus Tullius Cicero"
+    },
+    {
+      "id": "courage-woolf-self",
+      "text": "You cannot find peace by avoiding life.",
+      "author": "Virginia Woolf"
+    },
+    {
+      "id": "courage-lewis-door",
+      "text": "There are far, far better things ahead than any we leave behind.",
+      "author": "C.S. Lewis"
+    },
+    {
+      "id": "courage-achebe-thing",
+      "text": "The world has no end, and what is good among one people is an abomination with others.",
+      "author": "Chinua Achebe"
+    },
+    {
+      "id": "courage-wollstonecraft-mind",
+      "text": "Strengthen the mind and there will be no need to fear the body.",
+      "author": "Mary Wollstonecraft"
+    },
+    {
+      "id": "courage-baldwin-face",
+      "text": "Not everything that is faced can be changed, but nothing can be changed until it is faced.",
+      "author": "James Baldwin"
+    },
+    {
+      "id": "courage-rumi-wound",
+      "text": "The wound is the place where the light enters you.",
+      "author": "Rumi"
+    },
+    {
+      "id": "courage-steinbeck-brave",
+      "text": "And now that you don't have to be perfect, you can be good.",
+      "author": "John Steinbeck"
+    },
+    {
+      "id": "courage-orwell-liberty",
+      "text": "In a time of deceit, telling the truth is a revolutionary act.",
+      "author": "George Orwell"
+    },
+    {
+      "id": "courage-morrison-free",
+      "text": "Freeing yourself was one thing, claiming ownership of that freed self was another.",
+      "author": "Toni Morrison"
+    },
+    {
+      "id": "courage-neruda-rise",
+      "text": "You can cut all the flowers but you cannot keep spring from coming.",
+      "author": "Pablo Neruda"
+    },
+    {
+      "id": "courage-aristotle-fear",
+      "text": "He who has overcome his fears will truly be free.",
+      "author": "Aristotle"
+    }
+  ]
+}

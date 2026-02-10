@@ -5,8 +5,10 @@
 
 import essayDatabase from '@/data/essays/essays.json';
 import poemDatabase from '@/data/poems/poems.json';
+import quoteDatabase from '@/data/quotes/quotes.json';
 import type { StoredEssay, EssayDatabase } from '@/data/essays';
 import type { StoredPoem, PoemDatabase } from '@/data/poems';
+import type { StoredQuote, QuoteDatabase } from '@/data/quotes';
 
 export interface Reading {
   type: 'poem' | 'essay';
@@ -125,9 +127,23 @@ function getPoem(poemId: string): Reading {
   };
 }
 
+export interface Quote {
+  text: string;
+  author: string;
+}
+
+/**
+ * Get all quotes from the database
+ */
+function getStoredQuotes(): StoredQuote[] {
+  const db = quoteDatabase as QuoteDatabase;
+  return db.quotes;
+}
+
 export interface DailyReadings {
   poem: Reading;
   essay: Reading;
+  quote: Quote;
 }
 
 /**
@@ -139,13 +155,15 @@ export function getDailyReadings(date: Date = new Date()): DailyReadings {
   const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
   const seed = parseInt(dateStr, 10);
 
-  // Get poems and essays from stored databases
+  // Get poems, essays, and quotes from stored databases
   const poems = getStoredPoems();
   const essayIds = getEssayIds();
+  const quotes = getStoredQuotes();
 
-  // Use different seeds for poem and essay to get variety
+  // Use different seeds for poem, essay, and quote to get variety
   const poemIndex = seed % poems.length;
   const essayIndex = (seed * 7) % essayIds.length;
+  const quoteIndex = (seed * 13) % quotes.length;
 
   // Get poem from stored database
   const poemId = poems[poemIndex].id;
@@ -155,7 +173,14 @@ export function getDailyReadings(date: Date = new Date()): DailyReadings {
   const essayId = essayIds[essayIndex];
   const essay = getEssay(essayId);
 
-  return { poem, essay };
+  // Get quote from stored database
+  const storedQuote = quotes[quoteIndex];
+  const quote: Quote = {
+    text: storedQuote.text,
+    author: storedQuote.author,
+  };
+
+  return { poem, essay, quote };
 }
 
 /**
